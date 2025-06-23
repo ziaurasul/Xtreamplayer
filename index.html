@@ -163,6 +163,7 @@
   </style>
 </head>
 <body>
+
   <div id="splash">
     <video autoplay muted loop id="welcomeVideo">
       <source src="splash.mp4" type="video/mp4" />
@@ -172,6 +173,7 @@
   </div>
 
   <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
+
   <div class="login-container" id="login">
     <h1>ZeeIPTV 🍿</h1>
     <input type="text" id="server" placeholder="Server URL (e.g. http://host:port)" />
@@ -213,39 +215,78 @@
       const root = document.documentElement;
       root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
     }
+
     function closeTrailer() {
       document.getElementById('trailerModal').style.display = 'none';
       document.getElementById('trailerFrame').src = '';
     }
+
     function openTrailer(title) {
       const search = encodeURIComponent(title + ' trailer');
       document.getElementById('trailerFrame').src = `https://www.youtube.com/embed?listType=search&list=${search}`;
       document.getElementById('trailerModal').style.display = 'flex';
     }
 
-    // ✅ Fix: Define login function
-    function login() {
-      const server = document.getElementById("server").value;
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      const loginURL = `${server}/player_api.php?username=${username}&password=${password}`;
-      fetch(loginURL)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.user_info && data.user_info.auth === 1) {
-            document.getElementById("login").style.display = "none";
-            document.getElementById("app").style.display = "flex";
-            document.getElementById("userInfo").innerText = `👤 ${username} | Exp: ${data.user_info.exp_date}`;
-            document.getElementById("debugLog").style.display = "none";
-          } else {
-            document.getElementById("error").style.display = "block";
-          }
-        })
-        .catch(err => {
-          document.getElementById("debugLog").style.display = "block";
-          document.getElementById("debugLog").innerText = err;
+    // ✅ Login function using CORS proxy
+    async function login() {
+      const server = document.getElementById("server").value.trim();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!server || !username || !password) {
+        alert("Please enter all fields");
+        return;
+      }
+
+      const apiURL = `${server}/player_api.php?username=${username}&password=${password}`;
+      const loginURL = `https://corsproxy.io/?${encodeURIComponent(apiURL)}`;
+
+      try {
+        const response = await fetch(loginURL);
+        const data = await response.json();
+
+        if (data && data.user_info && data.user_info.auth === 1) {
+          document.getElementById("login").style.display = "none";
+          document.getElementById("app").style.display = "flex";
+          document.getElementById("userInfo").innerText =
+            `👤 ${username} | Exp: ${data.user_info.exp_date}`;
+          document.getElementById("debugLog").style.display = "none";
+          localStorage.setItem("zeeiptv_login", JSON.stringify({ server, username, password }));
+        } else {
           document.getElementById("error").style.display = "block";
-        });
+        }
+      } catch (err) {
+        document.getElementById("debugLog").style.display = "block";
+        document.getElementById("debugLog").innerText =
+          'Failed to fetch or invalid response.\n' + err;
+        document.getElementById("error").style.display = "block";
+      }
+    }
+
+    // Auto-fill login fields from localStorage
+    window.addEventListener("DOMContentLoaded", () => {
+      const saved = localStorage.getItem("zeeiptv_login");
+      if (saved) {
+        const { server, username, password } = JSON.parse(saved);
+        document.getElementById("server").value = server;
+        document.getElementById("username").value = username;
+        document.getElementById("password").value = password;
+      }
+    });
+
+    function showTab(tabName) {
+      document.querySelectorAll('.content').forEach(div => div.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function searchChannels() {
+      // Add search logic here
+    }
+
+    function filterByCategory() {
+      // Add filter logic here
     }
   </script>
 </body>
