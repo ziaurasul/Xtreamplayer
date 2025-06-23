@@ -1,300 +1,143 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZeeIPTV - Xtream Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>XtreamPlayer Netflix Clone</title>
   <style>
     :root {
       --bg: #121212;
-      --text: #ffffff;
-      --card: #1f1f1f;
+      --fg: #ffffff;
+      --accent: #e50914;
     }
-    [data-theme="light"] {
+    body.light {
       --bg: #f9f9f9;
-      --text: #000000;
-      --card: #ffffff;
+      --fg: #111;
     }
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      margin: 0; font-family: Arial, sans-serif;
+      background: var(--bg); color: var(--fg);
     }
+    .container { max-width: 1200px; margin: auto; padding: 20px; }
+    input, button { padding: 10px; width: 100%; margin: 5px 0; border-radius: 5px; border: none; }
+    button { background: var(--accent); color: white; cursor: pointer; }
+    .tabs button { width: 33%; background: #333; color: white; border: none; padding: 10px; }
+    .tabs button.active { background: var(--accent); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+    .card { background: #222; padding: 5px; border-radius: 8px; overflow: hidden; cursor: pointer; }
+    .card img { width: 100%; border-radius: 5px; }
+    .card h4 { font-size: 14px; margin: 5px 0; }
+    video { width: 100%; max-height: 500px; margin-top: 10px; background: black; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; }
+    .toggle { cursor: pointer; font-size: 20px; }
     .hidden { display: none; }
-    .login-container, .app-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    input, button, select {
-      padding: 10px;
-      margin: 5px;
-      border: none;
-      border-radius: 5px;
-    }
-    input { width: 300px; }
-    button {
-      background: crimson;
-      color: white;
-      cursor: pointer;
-    }
-    .tabs {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .tab-btn {
-      background: var(--card);
-      color: var(--text);
-      padding: 8px 15px;
-    }
-    .tab-btn.active { background: red; }
-    .theme-toggle {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-    }
-    .info-bar { font-size: 14px; margin-top: 20px; }
-    .search-filter {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .content {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-    }
-    .content.active { display: flex; }
-    .channel-list {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-    }
-    .channel {
-      width: 150px;
-      background: var(--card);
-      padding: 10px;
-      text-align: center;
-      border-radius: 10px;
-      cursor: pointer;
-      position: relative;
-    }
-    .channel img {
-      width: 100%;
-      height: 100px;
-      object-fit: cover;
-      border-radius: 5px;
-    }
-    .channel .fav {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      background: yellow;
-      color: black;
-      padding: 2px 5px;
-      border-radius: 50%;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .debug {
-      max-width: 90vw;
-      margin-top: 20px;
-      background: #222;
-      padding: 10px;
-      font-size: 12px;
-      color: lime;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .meta { font-size: 12px; color: #aaa; }
-    video { width: 100%; max-height: 100vh; object-fit: cover; }
-    #splash {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: 100vw;
-      z-index: 1000;
-      background-color: black;
-    }
-    #splash button {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: white;
-      color: black;
-      padding: 10px;
-    }
-    .modal {
-      position: fixed;
-      z-index: 2000;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.9);
-      display: none;
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      width: 80%;
-      max-width: 720px;
-    }
-    .modal iframe {
-      width: 100%;
-      height: 400px;
-    }
-    .modal button {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: red;
-      color: white;
-    }
   </style>
 </head>
-<body>
-
-  <div id="splash">
-    <video autoplay muted loop id="welcomeVideo">
-      <source src="splash.mp4" type="video/mp4" />
-      Your browser does not support the video tag.
-    </video>
-    <button onclick="document.getElementById('splash').style.display='none'">Skip</button>
-  </div>
-
-  <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Theme</button>
-
-  <div class="login-container" id="login">
-    <h1>ZeeIPTV 🍿</h1>
-    <input type="text" id="server" placeholder="Server URL (e.g. http://host:port)" />
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="login()">Login</button>
-    <p id="error" style="color: red; display: none;">Login failed. Check credentials or CORS.</p>
-    <div class="debug" id="debugLog" style="display: none;"></div>
-  </div>
-
-  <div class="app-container" id="app" style="display: none;">
-    <div class="info-bar" id="userInfo"></div>
-    <div class="tabs">
-      <button class="tab-btn active" onclick="showTab('live')">Live TV</button>
-      <button class="tab-btn" onclick="showTab('movie')">Movies</button>
-      <button class="tab-btn" onclick="showTab('series')">Series</button>
-      <button class="tab-btn" onclick="showTab('fav')">Favorites</button>
+<body class="dark">
+  <div class="container">
+    <div class="topbar">
+      <h2>XtreamPlayer 🍿</h2>
+      <span class="toggle" onclick="toggleTheme()">🌓</span>
     </div>
-    <div class="search-filter">
-      <input type="text" id="searchBox" onkeyup="searchChannels()" placeholder="Search..." />
-      <select id="categoryFilter" onchange="filterByCategory()"></select>
-    </div>
-    <div id="live" class="content active"><h2>Live Channels</h2><div id="liveChannels" class="channel-list"></div></div>
-    <div id="movie" class="content"><h2>Movies</h2><div id="movieChannels" class="channel-list"></div></div>
-    <div id="series" class="content"><h2>Series</h2><div id="seriesChannels" class="channel-list"></div></div>
-    <div id="fav" class="content"><h2>Favorites</h2><div id="favChannels" class="channel-list"></div></div>
-  </div>
 
-  <!-- Modal for trailer -->
-  <div class="modal" id="trailerModal">
-    <div class="modal-content">
-      <iframe id="trailerFrame" src="" frameborder="0" allowfullscreen></iframe>
-      <button onclick="closeTrailer()">Close</button>
+    <!-- Login -->
+    <div id="loginBox">
+      <input type="text" id="server" placeholder="Server URL (http://...)" />
+      <input type="text" id="username" placeholder="Username" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="login()">Login</button>
+    </div>
+
+    <!-- App Interface -->
+    <div id="appBox" class="hidden">
+      <div class="tabs">
+        <button onclick="showTab('live')" class="active">Live TV</button>
+        <button onclick="showTab('vod')">Movies</button>
+        <button onclick="showTab('series')">Series</button>
+      </div>
+
+      <div id="live" class="grid"></div>
+      <div id="vod" class="grid hidden"></div>
+      <div id="series" class="grid hidden"></div>
+
+      <video id="player" controls autoplay></video>
     </div>
   </div>
 
   <script>
-    function toggleTheme() {
-      const root = document.documentElement;
-      root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
+    let baseUrl = '', user = '', pass = '';
+
+    function login() {
+      baseUrl = document.getElementById("server").value;
+      user = document.getElementById("username").value;
+      pass = document.getElementById("password").value;
+
+      fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.user_info && data.user_info.auth == 1) {
+            document.getElementById('loginBox').classList.add('hidden');
+            document.getElementById('appBox').classList.remove('hidden');
+            loadAll();
+          } else {
+            alert("Login failed");
+          }
+        })
+        .catch(() => alert("Login error. Check server and credentials."));
     }
 
-    function closeTrailer() {
-      document.getElementById('trailerModal').style.display = 'none';
-      document.getElementById('trailerFrame').src = '';
+    function loadAll() {
+      loadContent('get_live_streams', 'live');
+      loadContent('get_vod_streams', 'vod');
+      loadContent('get_series', 'series');
     }
 
-    function openTrailer(title) {
-      const search = encodeURIComponent(title + ' trailer');
-      document.getElementById('trailerFrame').src = `https://www.youtube.com/embed?listType=search&list=${search}`;
-      document.getElementById('trailerModal').style.display = 'flex';
+    function loadContent(action, tabId) {
+      fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${action}`)
+        .then(res => res.json())
+        .then(data => {
+          const grid = document.getElementById(tabId);
+          grid.innerHTML = '';
+          data.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+              <img src="${item.stream_icon || item.cover || ''}" />
+              <h4>${item.name}</h4>
+            `;
+            card.onclick = () => {
+              let url;
+              if (tabId === 'live') {
+                url = `${baseUrl}/${user}/${pass}/${item.stream_id}.m3u8`;
+              } else if (tabId === 'vod') {
+                url = `${baseUrl}/movie/${user}/${pass}/${item.stream_id}.mp4`;
+              } else if (tabId === 'series') {
+                alert('Episode playback not implemented yet');
+                return;
+              }
+              const player = document.getElementById('player');
+              player.src = url;
+              player.play();
+              window.scrollTo(0, document.body.scrollHeight);
+            };
+            grid.appendChild(card);
+          });
+        });
     }
 
-    // ✅ Login function using CORS proxy
-    async function login() {
-  const server = document.getElementById("server").value.trim();
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value.trim();
+    function showTab(tab) {
+      ['live', 'vod', 'series'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(tab).classList.remove('hidden');
 
-  if (!server || !username || !password) {
-    alert("Please enter all fields");
-    return;
-  }
-
-  const apiURL = `${server}/player_api.php?username=${username}&password=${password}`;
-  const loginURL = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiURL)}`;
-
-  try {
-    const response = await fetch(loginURL);
-    const text = await response.text();
-
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (jsonError) {
-      throw new Error("Invalid JSON:\n" + text);
-    }
-
-    if (data && data.user_info && data.user_info.auth === 1) {
-      document.getElementById("login").style.display = "none";
-      document.getElementById("app").style.display = "flex";
-      document.getElementById("userInfo").innerText =
-        `👤 ${username} | Exp: ${data.user_info.exp_date}`;
-      document.getElementById("debugLog").style.display = "none";
-      localStorage.setItem("zeeiptv_login", JSON.stringify({ server, username, password }));
-    } else {
-      document.getElementById("error").style.display = "block";
-    }
-  } catch (err) {
-    document.getElementById("debugLog").style.display = "block";
-    document.getElementById("debugLog").innerText =
-      'Login failed. Error:\n' + err;
-    document.getElementById("error").style.display = "block";
-  }
-}
-
-
-    // Auto-fill login fields from localStorage
-    window.addEventListener("DOMContentLoaded", () => {
-      const saved = localStorage.getItem("zeeiptv_login");
-      if (saved) {
-        const { server, username, password } = JSON.parse(saved);
-        document.getElementById("server").value = server;
-        document.getElementById("username").value = username;
-        document.getElementById("password").value = password;
-      }
-    });
-
-    function showTab(tabName) {
-      document.querySelectorAll('.content').forEach(div => div.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(tabName).classList.add('active');
+      document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
       event.target.classList.add('active');
     }
 
-    function searchChannels() {
-      // Add search logic here
-    }
-
-    function filterByCategory() {
-      // Add filter logic here
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      document.body.classList.toggle('dark');
     }
   </script>
 </body>
