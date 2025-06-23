@@ -229,39 +229,47 @@
 
     // ✅ Login function using CORS proxy
     async function login() {
-      const server = document.getElementById("server").value.trim();
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
+  const server = document.getElementById("server").value.trim();
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
 
-      if (!server || !username || !password) {
-        alert("Please enter all fields");
-        return;
-      }
+  if (!server || !username || !password) {
+    alert("Please enter all fields");
+    return;
+  }
 
-      const apiURL = `${server}/player_api.php?username=${username}&password=${password}`;
-      const loginURL = `https://corsproxy.io/?${encodeURIComponent(apiURL)}`;
+  const apiURL = `${server}/player_api.php?username=${username}&password=${password}`;
+  const loginURL = `https://api.allorigins.win/raw?url=${encodeURIComponent(apiURL)}`;
 
-      try {
-        const response = await fetch(loginURL);
-        const data = await response.json();
+  try {
+    const response = await fetch(loginURL);
+    const text = await response.text();
 
-        if (data && data.user_info && data.user_info.auth === 1) {
-          document.getElementById("login").style.display = "none";
-          document.getElementById("app").style.display = "flex";
-          document.getElementById("userInfo").innerText =
-            `👤 ${username} | Exp: ${data.user_info.exp_date}`;
-          document.getElementById("debugLog").style.display = "none";
-          localStorage.setItem("zeeiptv_login", JSON.stringify({ server, username, password }));
-        } else {
-          document.getElementById("error").style.display = "block";
-        }
-      } catch (err) {
-        document.getElementById("debugLog").style.display = "block";
-        document.getElementById("debugLog").innerText =
-          'Failed to fetch or invalid response.\n' + err;
-        document.getElementById("error").style.display = "block";
-      }
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (jsonError) {
+      throw new Error("Invalid JSON:\n" + text);
     }
+
+    if (data && data.user_info && data.user_info.auth === 1) {
+      document.getElementById("login").style.display = "none";
+      document.getElementById("app").style.display = "flex";
+      document.getElementById("userInfo").innerText =
+        `👤 ${username} | Exp: ${data.user_info.exp_date}`;
+      document.getElementById("debugLog").style.display = "none";
+      localStorage.setItem("zeeiptv_login", JSON.stringify({ server, username, password }));
+    } else {
+      document.getElementById("error").style.display = "block";
+    }
+  } catch (err) {
+    document.getElementById("debugLog").style.display = "block";
+    document.getElementById("debugLog").innerText =
+      'Login failed. Error:\n' + err;
+    document.getElementById("error").style.display = "block";
+  }
+}
+
 
     // Auto-fill login fields from localStorage
     window.addEventListener("DOMContentLoaded", () => {
