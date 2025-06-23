@@ -222,6 +222,31 @@
       document.getElementById('trailerFrame').src = `https://www.youtube.com/embed?listType=search&list=${search}`;
       document.getElementById('trailerModal').style.display = 'flex';
     }
+
+    // ✅ Fix: Define login function
+    function login() {
+      const server = document.getElementById("server").value;
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const loginURL = `${server}/player_api.php?username=${username}&password=${password}`;
+      fetch(loginURL)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.user_info && data.user_info.auth === 1) {
+            document.getElementById("login").style.display = "none";
+            document.getElementById("app").style.display = "flex";
+            document.getElementById("userInfo").innerText = `👤 ${username} | Exp: ${data.user_info.exp_date}`;
+            document.getElementById("debugLog").style.display = "none";
+          } else {
+            document.getElementById("error").style.display = "block";
+          }
+        })
+        .catch(err => {
+          document.getElementById("debugLog").style.display = "block";
+          document.getElementById("debugLog").innerText = err;
+          document.getElementById("error").style.display = "block";
+        });
+    }
   </script>
 </body>
 </html>
