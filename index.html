@@ -28,7 +28,7 @@
 <body>
 
   <div class="splash-screen" id="splash">
-    <video autoplay muted loop playsinline onerror="skipSplash()" id="splashVideo">
+    <video autoplay muted loop playsinline id="splashVideo">
       <source src="splash.mp4" type="video/mp4">
     </video>
     <button onclick="skipSplash()">Skip</button>
@@ -179,7 +179,6 @@
       document.getElementById('playerModal').style.display = 'none';
     }
 
-    // Fallback splash auto-skip
     window.onload = () => {
       setTimeout(() => {
         if (!document.getElementById('loginBox').classList.contains('hidden') &&
