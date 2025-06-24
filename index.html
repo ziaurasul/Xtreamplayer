@@ -179,9 +179,11 @@
       document.getElementById('playerModal').style.display = 'none';
     }
 
+    // Fallback splash auto-skip
     window.onload = () => {
       setTimeout(() => {
-        if (!document.getElementById('loginBox').classList.contains('hidden')) {
+        if (!document.getElementById('loginBox').classList.contains('hidden') &&
+            !document.getElementById('home').classList.contains('visible')) {
           skipSplash();
         }
       }, 3000);
