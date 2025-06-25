@@ -8,65 +8,27 @@
   <script src="https://cdn.jsdelivr.net/npm/video.js@8.5.2/dist/video.min.js"></script> 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script> 
   <style>
-    :root {
-      --bg-color: #0e0e0e;
-      --card-bg: #1f1f1f;
-      --accent: #e50914;
-      --text: white;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      background: var(--bg-color);
-      color: var(--text);
-      margin: 0;
-      padding: 0;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      padding: 20px;
-    }
-
-    input, button {
-      padding: 10px;
-      margin: 5px 0;
-      width: 100%;
-      border-radius: 5px;
-      border: none;
-    }
-
-    button {
-      background-color: var(--accent);
-      color: white;
-      cursor: pointer;
-    }
-
-    .tabs {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .tab {
-      background: #333;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .tab.active {
-      background: var(--accent);
-    }
-
+    body { font-family: Arial, sans-serif; background: #0e0e0e; color: #fff; margin: 0; padding: 0; }
+    .container { padding: 20px; max-width: 1200px; margin: auto; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; border-radius: 5px; border: none; }
+    button { background-color: #e50914; color: white; cursor: pointer; }
+    .tabs, .category-title { margin-top: 20px; }
+    .tabs { display: flex; justify-content: center; gap: 10px; }
+    .tab { background: #333; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    .tab.active { background: #e50914; }
+    .grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .item { width: 160px; background: #1f1f1f; border-radius: 8px; overflow: hidden; cursor: pointer; }
+    .item img { width: 100%; height: 100px; object-fit: cover; }
+    .item div { padding: 8px; font-size: 14px; text-align: center; }
+    .splash-screen { position: fixed; inset: 0; background: black; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+    .skip { margin-top: 20px; background: #e50914; padding: 10px 20px; border: none; color: white; border-radius: 5px; cursor: pointer; }
+    .hidden { display: none !important; }
+    /* Netflix Style Additions */
     .section-title {
       margin-top: 20px;
       font-size: 18px;
       font-weight: bold;
     }
-
     .carousel {
       display: flex;
       overflow-x: auto;
@@ -74,72 +36,16 @@
       scroll-behavior: smooth;
       padding-bottom: 10px;
     }
-
     .carousel::-webkit-scrollbar {
       height: 8px;
     }
-
     .carousel::-webkit-scrollbar-thumb {
       background: #444;
       border-radius: 4px;
     }
-
-    .item {
-      min-width: 160px;
-      background: var(--card-bg);
-      border-radius: 8px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
     .item:hover {
       transform: scale(1.05);
     }
-
-    .item img {
-      width: 100%;
-      height: 100px;
-      object-fit: cover;
-    }
-
-    .item div {
-      padding: 8px;
-      font-size: 14px;
-      text-align: center;
-    }
-
-    .splash-screen {
-      position: fixed;
-      inset: 0;
-      background: black;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .skip {
-      margin-top: 20px;
-      background: var(--accent);
-      padding: 10px 20px;
-      border: none;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    video {
-      width: 100%;
-      max-height: 100vh;
-      object-fit: contain;
-    }
-
     .player-fullscreen {
       position: fixed;
       top: 0;
@@ -152,19 +58,22 @@
       justify-content: center;
       align-items: center;
     }
+    video {
+      width: 100%;
+      max-height: 100vh;
+      object-fit: contain;
+    }
   </style>
 </head>
 <body>
 
-<!-- Splash Screen -->
+<!-- DO NOT CHANGE BELOW THIS LINE -->
 <div class="splash-screen" id="splash">
   <video autoplay muted loop playsinline>
     <source src="splash.mp4" type="video/mp4">
   </video>
   <button class="skip" onclick="startApp()">Skip</button>
 </div>
-
-<!-- Login Box -->
 <div id="loginBox" class="container hidden">
   <h2>ZeeIPTV 🍿</h2>
   <input type="text" id="server" placeholder="Server URL (http://...)" />
@@ -173,21 +82,21 @@
   <button onclick="login()">Login</button>
   <div id="errorBox" style="color:red;"></div>
 </div>
+<!-- DO NOT CHANGE ABOVE THIS LINE -->
 
-<!-- Home Screen -->
+<!-- Netflix-style Home Screen (Enhanced) -->
 <div id="home" class="container hidden">
   <div class="tabs">
     <div class="tab active" onclick="loadTab('live')">Live</div>
     <div class="tab" onclick="loadTab('movie')">Movies</div>
     <div class="tab" onclick="loadTab('series')">Series</div>
   </div>
-
   <div id="contentArea"></div>
 </div>
 
-<!-- Player Page -->
+<!-- Fullscreen Player -->
 <div id="playerPage" class="player-fullscreen hidden">
-  <button onclick="back()" style="position: absolute; top: 10px; left: 10px; z-index: 2;">⏪ Back</button>
+  <button onclick="back()" style="position: absolute; top: 10px; left: 10px;">⏪ Back</button>
   <video id="player" class="video-js vjs-default-skin" controls autoplay></video>
 </div>
 
@@ -195,29 +104,29 @@
   let baseUrl = '', user = '', pass = '', currentType = 'live';
   const cache = {};
 
+  // Do not touch
   function startApp() {
     document.getElementById('splash').classList.add('hidden');
     document.getElementById('loginBox').classList.remove('hidden');
   }
 
+  // Do not touch
   function login() {
     baseUrl = document.getElementById('server').value.trim();
     user = document.getElementById('username').value.trim();
     pass = document.getElementById('password').value.trim();
     document.getElementById('errorBox').textContent = "";
-
     if (!baseUrl.includes('http')) {
       document.getElementById('errorBox').textContent = "Enter valid server URL.";
       return;
     }
-
     fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}`)
       .then(res => res.json())
       .then(data => {
         if (data.user_info && data.user_info.auth == 1) {
           document.getElementById('loginBox').classList.add('hidden');
           document.getElementById('home').classList.remove('hidden');
-          loadTab('live');
+          loadTab('live'); // Load Netflix UI
         } else {
           document.getElementById('errorBox').textContent = "Login failed.";
         }
@@ -227,6 +136,7 @@
       });
   }
 
+  // Enhanced Netflix-style UI
   function loadTab(type) {
     currentType = type;
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -262,13 +172,6 @@
         items.forEach(item => {
           let thumb = item.stream_icon || item.cover || '';
           let name = item.name || item.title || 'Untitled';
-
-          // Cache images
-          if (!cache[thumb]) {
-            const img = new Image();
-            img.src = thumb;
-            cache[thumb] = true;
-          }
 
           let html = `<div class="item" onclick="playItem('${type}', ${JSON.stringify(item).replace(/"/g, '&quot;')})">
                         <img src="${thumb}" onerror="this.src=''" loading="lazy" />
