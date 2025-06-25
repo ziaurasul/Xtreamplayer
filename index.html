@@ -3,191 +3,347 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ZeeIPTV 🍿</title>
+  <title>ZeeIPTV 🍿 Netflix UI</title>
+  <link href="https://cdn.jsdelivr.net/npm/video.js@8.5.2/dist/video-js.min.css"  rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/video.js@8.5.2/dist/video.min.js"></script> 
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script> 
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #111; color: #fff; }
-    .container { max-width: 960px; margin: auto; padding: 20px; }
-    input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 5px; border: none; }
-    button { background: #e50914; color: #fff; font-weight: bold; cursor: pointer; }
-    .hidden { display: none; }
-    .splash-screen { position: fixed; inset: 0; background: black; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-    .splash-screen video { max-height: 300px; }
-    .error { color: red; margin-top: 10px; text-align: center; font-size: 14px; }
-    nav { display: flex; justify-content: space-around; margin-top: 20px; }
-    nav button { flex: 1; margin: 0 5px; background: #222; }
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
-    .card { background: #222; padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.3s ease; text-align: center; }
-    .card:hover { background: #333; }
-    .card img { width: 100%; border-radius: 5px; height: 200px; object-fit: cover; }
-    #playerModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 99999; }
-    #playerModal video { width: 100%; max-height: 80vh; background: #000; }
-    #playerModal .close-btn { position: absolute; top: 10px; right: 10px; font-size: 24px; color: white; cursor: pointer; }
-    #episodeList { margin-top: 20px; }
+    :root {
+      --bg-color: #0e0e0e;
+      --card-bg: #1f1f1f;
+      --accent: #e50914;
+      --text: white;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      border-radius: 5px;
+      border: none;
+    }
+
+    button {
+      background-color: var(--accent);
+      color: white;
+      cursor: pointer;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .tab {
+      background: #333;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--accent);
+    }
+
+    .section-title {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .carousel {
+      display: flex;
+      overflow-x: auto;
+      gap: 10px;
+      scroll-behavior: smooth;
+      padding-bottom: 10px;
+    }
+
+    .carousel::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .carousel::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 4px;
+    }
+
+    .item {
+      min-width: 160px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .item:hover {
+      transform: scale(1.05);
+    }
+
+    .item img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+    }
+
+    .item div {
+      padding: 8px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .splash-screen {
+      position: fixed;
+      inset: 0;
+      background: black;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .skip {
+      margin-top: 20px;
+      background: var(--accent);
+      padding: 10px 20px;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    video {
+      width: 100%;
+      max-height: 100vh;
+      object-fit: contain;
+    }
+
+    .player-fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      z-index: 1001;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
 
-  <div class="splash-screen" id="splash">
-    <video autoplay muted loop playsinline id="splashVideo">
-      <source src="splash.mp4" type="video/mp4">
-    </video>
-    <button onclick="skipSplash()">Skip</button>
+<!-- Splash Screen -->
+<div class="splash-screen" id="splash">
+  <video autoplay muted loop playsinline>
+    <source src="splash.mp4" type="video/mp4">
+  </video>
+  <button class="skip" onclick="startApp()">Skip</button>
+</div>
+
+<!-- Login Box -->
+<div id="loginBox" class="container hidden">
+  <h2>ZeeIPTV 🍿</h2>
+  <input type="text" id="server" placeholder="Server URL (http://...)" />
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="login()">Login</button>
+  <div id="errorBox" style="color:red;"></div>
+</div>
+
+<!-- Home Screen -->
+<div id="home" class="container hidden">
+  <div class="tabs">
+    <div class="tab active" onclick="loadTab('live')">Live</div>
+    <div class="tab" onclick="loadTab('movie')">Movies</div>
+    <div class="tab" onclick="loadTab('series')">Series</div>
   </div>
 
-  <div id="loginBox" class="container hidden">
-    <h2>ZeeIPTV 🍿 Login</h2>
-    <input type="text" id="server" placeholder="Server URL (http://...)" />
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="login()">Login</button>
-    <div id="errorBox" class="error"></div>
-  </div>
+  <div id="contentArea"></div>
+</div>
 
-  <div id="home" class="container hidden">
-    <h2>Welcome to ZeeIPTV 🎉</h2>
-    <nav>
-      <button onclick="showTab('live')">Live</button>
-      <button onclick="showTab('movie')">Movies</button>
-      <button onclick="showTab('series')">Series</button>
-    </nav>
-    <div id="live" class="tab-section hidden"></div>
-    <div id="movie" class="tab-section hidden"></div>
-    <div id="series" class="tab-section hidden"></div>
-    <div id="episodeList" class="hidden"></div>
-  </div>
+<!-- Player Page -->
+<div id="playerPage" class="player-fullscreen hidden">
+  <button onclick="back()" style="position: absolute; top: 10px; left: 10px; z-index: 2;">⏪ Back</button>
+  <video id="player" class="video-js vjs-default-skin" controls autoplay></video>
+</div>
 
-  <div id="playerModal">
-    <span class="close-btn" onclick="closePlayer()">&times;</span>
-    <video id="player" controls autoplay></video>
-  </div>
+<script>
+  let baseUrl = '', user = '', pass = '', currentType = 'live';
+  const cache = {};
 
-  <script>
-    let baseUrl = '', user = '', pass = '';
+  function startApp() {
+    document.getElementById('splash').classList.add('hidden');
+    document.getElementById('loginBox').classList.remove('hidden');
+  }
 
-    function skipSplash() {
-      document.getElementById('splash').classList.add('hidden');
-      const saved = {
-        server: localStorage.getItem('server'),
-        username: localStorage.getItem('username'),
-        password: localStorage.getItem('password')
-      };
-      if (saved.server && saved.username && saved.password) {
-        baseUrl = saved.server;
-        user = saved.username;
-        pass = saved.password;
-        document.getElementById('home').classList.remove('hidden');
-        loadAll();
-      } else {
-        document.getElementById('loginBox').classList.remove('hidden');
-      }
+  function login() {
+    baseUrl = document.getElementById('server').value.trim();
+    user = document.getElementById('username').value.trim();
+    pass = document.getElementById('password').value.trim();
+    document.getElementById('errorBox').textContent = "";
+
+    if (!baseUrl.includes('http')) {
+      document.getElementById('errorBox').textContent = "Enter valid server URL.";
+      return;
     }
 
-    function login() {
-      baseUrl = document.getElementById('server').value.trim();
-      user = document.getElementById('username').value.trim();
-      pass = document.getElementById('password').value.trim();
-      const errorBox = document.getElementById('errorBox');
-      errorBox.textContent = '';
+    fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.user_info && data.user_info.auth == 1) {
+          document.getElementById('loginBox').classList.add('hidden');
+          document.getElementById('home').classList.remove('hidden');
+          loadTab('live');
+        } else {
+          document.getElementById('errorBox').textContent = "Login failed.";
+        }
+      })
+      .catch(err => {
+        document.getElementById('errorBox').textContent = "Connection error: " + err;
+      });
+  }
 
-      if (!baseUrl.startsWith("http")) {
-        errorBox.textContent = "Invalid server URL";
-        return;
-      }
+  function loadTab(type) {
+    currentType = type;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
 
-      fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}`)
+    const actionMap = {
+      live: 'get_live_categories',
+      movie: 'get_vod_categories',
+      series: 'get_series_categories'
+    };
+
+    fetchFromCacheOrAPI(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${actionMap[type]}`, `cats-${type}`)
+      .then(cats => {
+        let html = '';
+        cats.forEach(cat => {
+          html += `<h3 class="section-title">${cat.category_name}</h3><div class="carousel" id="cat-${type}-${cat.category_id}"></div>`;
+          loadCategoryItems(type, cat.category_id);
+        });
+        document.getElementById('contentArea').innerHTML = html;
+      });
+  }
+
+  function loadCategoryItems(type, catId) {
+    const actionMap = {
+      live: 'get_live_streams',
+      movie: 'get_vod_streams',
+      series: 'get_series'
+    };
+    const key = `${type}-${catId}`;
+    fetchFromCacheOrAPI(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${actionMap[type]}&category_id=${catId}`, key)
+      .then(items => {
+        const grid = document.getElementById(`cat-${currentType}-${catId}`);
+        items.forEach(item => {
+          let thumb = item.stream_icon || item.cover || '';
+          let name = item.name || item.title || 'Untitled';
+
+          // Cache images
+          if (!cache[thumb]) {
+            const img = new Image();
+            img.src = thumb;
+            cache[thumb] = true;
+          }
+
+          let html = `<div class="item" onclick="playItem('${type}', ${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                        <img src="${thumb}" onerror="this.src=''" loading="lazy" />
+                        <div>${name}</div>
+                      </div>`;
+          grid.innerHTML += html;
+        });
+      });
+  }
+
+  function playItem(type, item) {
+    let ext = item.container_extension || 'm3u8';
+    let url = '';
+
+    if (type === 'live') {
+      url = `${baseUrl}/live/${user}/${pass}/${item.stream_id}.${ext}`;
+    } else if (type === 'movie') {
+      url = `${baseUrl}/movie/${user}/${pass}/${item.stream_id}.${ext}`;
+    } else if (type === 'series') {
+      fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=get_series_info&series_id=${item.series_id}`)
         .then(res => res.json())
         .then(data => {
-          if (data.user_info && data.user_info.auth == 1) {
-            localStorage.setItem('server', baseUrl);
-            localStorage.setItem('username', user);
-            localStorage.setItem('password', pass);
-            document.getElementById('loginBox').classList.add('hidden');
-            document.getElementById('home').classList.remove('hidden');
-            loadAll();
+          if (data.episodes && Object.keys(data.episodes).length > 0) {
+            const season = data.episodes[Object.keys(data.episodes)[0]];
+            const ep = season[0];
+            const epUrl = `${baseUrl}/series/${user}/${pass}/${ep.id}.${ext}`;
+            playVideo(epUrl);
           } else {
-            errorBox.textContent = "Login failed. Check credentials.";
+            alert("No episodes found");
           }
-        })
-        .catch(err => {
-          errorBox.textContent = "Login error or CORS: " + err.message;
         });
+      return;
     }
 
-    function showTab(tab) {
-      ['live', 'movie', 'series', 'episodeList'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
+    playVideo(url);
+  }
+
+  function playVideo(url) {
+    const video = document.getElementById('player');
+    document.getElementById('home').classList.add('hidden');
+    document.getElementById('playerPage').classList.remove('hidden');
+
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(video);
+    } else {
+      video.src = url;
+    }
+    video.play();
+  }
+
+  function back() {
+    const video = document.getElementById('player');
+    video.pause();
+    video.src = '';
+    document.getElementById('playerPage').classList.add('hidden');
+    document.getElementById('home').classList.remove('hidden');
+  }
+
+  // Caching helper
+  function fetchFromCacheOrAPI(url, key) {
+    const cached = localStorage.getItem(key);
+    if (cached) {
+      try {
+        return Promise.resolve(JSON.parse(cached));
+      } catch (e) {}
+    }
+    return fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        localStorage.setItem(key, JSON.stringify(data));
+        return data;
       });
-      document.getElementById(tab).classList.remove('hidden');
-    }
-
-    function loadAll() {
-      loadContent('get_live_streams', 'live');
-      loadContent('get_vod_streams', 'movie');
-      loadContent('get_series', 'series');
-      showTab('live');
-    }
-
-    function loadContent(action, containerId) {
-      fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${action}`)
-        .then(res => res.json())
-        .then(items => {
-          const container = document.getElementById(containerId);
-          container.innerHTML = `<div class="card-grid">` + items.map(item => `
-            <div class="card" onclick="playItem('${item.stream_id || item.series_id}', '${action}')">
-              <img src="${item.stream_icon || item.cover || ''}" onerror="this.src='https://via.placeholder.com/150x200?text=No+Image'">
-              <div>${item.name}</div>
-            </div>
-          `).join('') + `</div>`;
-        });
-    }
-
-    function playItem(id, type) {
-      const video = document.getElementById('player');
-      let streamType = 'live';
-      if (type.includes('vod')) streamType = 'movie';
-      if (type.includes('series')) {
-        fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=get_series_info&series_id=${id}`)
-          .then(res => res.json())
-          .then(data => {
-            const episodes = data.episodes || [];
-            const episodeList = document.getElementById('episodeList');
-            episodeList.innerHTML = `<h3 style="margin-top:20px">Episodes</h3><div class='card-grid'>` + episodes.map(ep => `
-              <div class="card" onclick="playEpisode('${ep.container_extension}', '${ep.id}')">
-                <div>${ep.title}</div>
-              </div>
-            `).join('') + `</div>`;
-            showTab('episodeList');
-          });
-        return;
-      }
-      video.src = `${baseUrl}/${user}/${pass}/${id}.m3u8`;
-      document.getElementById('playerModal').style.display = 'flex';
-      video.play();
-    }
-
-    function playEpisode(ext, eid) {
-      const video = document.getElementById('player');
-      video.src = `${baseUrl}/series/${user}/${pass}/${eid}.${ext}`;
-      document.getElementById('playerModal').style.display = 'flex';
-      video.play();
-    }
-
-    function closePlayer() {
-      const video = document.getElementById('player');
-      video.pause();
-      video.src = '';
-      document.getElementById('playerModal').style.display = 'none';
-    }
-
-    window.onload = () => {
-      setTimeout(() => {
-        if (!document.getElementById('loginBox').classList.contains('hidden') &&
-            !document.getElementById('home').classList.contains('visible')) {
-          skipSplash();
-        }
-      }, 3000);
-    }
-  </script>
-
+  }
+</script>
 </body>
 </html>
