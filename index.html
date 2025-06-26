@@ -173,7 +173,7 @@
 </div>
 <!-- DO NOT CHANGE ABOVE THIS LINE -->
 
-<!-- Home Screen -->
+<!-- Netflix-style Home Screen -->
 <div id="home" class="container hidden">
   <div class="tabs">
     <div class="tab active" onclick="loadTab('live')">Live</div>
@@ -208,7 +208,11 @@
       return;
     }
 
-    fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}`)
+    // Use CORS proxy if needed
+    const apiURL = `${baseUrl}/player_api.php?username=${user}&password=${pass}`;
+    const proxyURL = `https://corsproxy.io/?${encodeURIComponent(apiURL)}`;
+
+    fetch(proxyURL)
       .then(res => res.json())
       .then(data => {
         if (data.user_info && data.user_info.auth == 1) {
