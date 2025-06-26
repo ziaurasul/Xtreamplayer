@@ -208,17 +208,22 @@
       return;
     }
 
-    // Use CORS proxy if needed
     const apiURL = `${baseUrl}/player_api.php?username=${user}&password=${pass}`;
-    const proxyURL = `https://corsproxy.io/?${encodeURIComponent(apiURL)}`;
 
-    fetch(proxyURL)
-      .then(res => res.json())
+    fetch(apiURL)
+      .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          return response.json();
+        } else {
+          throw new Error("Server returned non-JSON response.");
+        }
+      })
       .then(data => {
         if (data.user_info && data.user_info.auth == 1) {
           document.getElementById('loginBox').classList.add('hidden');
           document.getElementById('home').classList.remove('hidden');
-          loadTab('live'); // Load Netflix-style UI
+          loadTab('live');
         } else {
           document.getElementById('errorBox').textContent = "Login failed.";
         }
@@ -239,8 +244,16 @@
       series: 'get_series_categories'
     };
 
-    fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${actionMap[type]}`)
-      .then(res => res.json())
+    const catURL = `${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${actionMap[type]}`;
+    fetch(catURL)
+      .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          return response.json();
+        } else {
+          throw new Error("Failed to load categories JSON.");
+        }
+      })
       .then(cats => {
         let html = '';
         cats.forEach(cat => {
@@ -248,6 +261,10 @@
           loadCategoryItems(type, cat.category_id);
         });
         document.getElementById('contentArea').innerHTML = html;
+      })
+      .catch(err => {
+        console.error("Failed to load categories:", err);
+        alert("Could not load categories. Check your connection or server.");
       });
   }
 
@@ -257,8 +274,17 @@
       movie: 'get_vod_streams',
       series: 'get_series'
     };
-    fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${actionMap[type]}&category_id=${catId}`)
-      .then(res => res.json())
+    const itemURL = `${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${actionMap[type]}&category_id=${catId}`;
+
+    fetch(itemURL)
+      .then(response => {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          return response.json();
+        } else {
+          throw new Error(`Failed to load items for category ${catId}`);
+        }
+      })
       .then(items => {
         const grid = document.getElementById(`cat-${currentType}-${catId}`);
         items.forEach(item => {
@@ -271,6 +297,9 @@
                       </div>`;
           grid.innerHTML += html;
         });
+      })
+      .catch(err => {
+        console.error("Failed to load category items:", err);
       });
   }
 
@@ -283,7 +312,8 @@
     } else if (type === 'movie') {
       url = `${baseUrl}/movie/${user}/${pass}/${item.stream_id}.${ext}`;
     } else if (type === 'series') {
-      fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=get_series_info&series_id=${item.series_id}`)
+      const epInfoURL = `${baseUrl}/player_api.php?username=${user}&password=${pass}&action=get_series_info&series_id=${item.series_id}`;
+      fetch(epInfoURL)
         .then(res => res.json())
         .then(data => {
           if (data.episodes && Object.keys(data.episodes).length > 0) {
