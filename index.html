@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ZeeIPTV 🍿</title>
+  <title>ZeeIPTV 🍿 Netflix UI</title>
   <link href="https://cdn.jsdelivr.net/npm/video.js@8.5.2/dist/video-js.min.css"  rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/video.js@8.5.2/dist/video.min.js"></script> 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script> 
@@ -209,8 +209,9 @@
     }
 
     const apiURL = `${baseUrl}/player_api.php?username=${user}&password=${pass}`;
+    const proxyURL = `https://corsproxy.io/?${encodeURIComponent(apiURL)}`;
 
-    fetch(apiURL)
+    fetch(proxyURL)
       .then(response => {
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -223,7 +224,7 @@
         if (data.user_info && data.user_info.auth == 1) {
           document.getElementById('loginBox').classList.add('hidden');
           document.getElementById('home').classList.remove('hidden');
-          loadTab('live');
+          loadTab('live'); // Load Netflix-style UI
         } else {
           document.getElementById('errorBox').textContent = "Login failed.";
         }
@@ -245,7 +246,9 @@
     };
 
     const catURL = `${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${actionMap[type]}`;
-    fetch(catURL)
+    const proxyCatURL = `https://corsproxy.io/?${encodeURIComponent(catURL)}`;
+
+    fetch(proxyCatURL)
       .then(response => {
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -275,8 +278,9 @@
       series: 'get_series'
     };
     const itemURL = `${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${actionMap[type]}&category_id=${catId}`;
+    const proxyItemURL = `https://corsproxy.io/?${encodeURIComponent(itemURL)}`;
 
-    fetch(itemURL)
+    fetch(proxyItemURL)
       .then(response => {
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -313,7 +317,9 @@
       url = `${baseUrl}/movie/${user}/${pass}/${item.stream_id}.${ext}`;
     } else if (type === 'series') {
       const epInfoURL = `${baseUrl}/player_api.php?username=${user}&password=${pass}&action=get_series_info&series_id=${item.series_id}`;
-      fetch(epInfoURL)
+      const proxyEpURL = `https://corsproxy.io/?${encodeURIComponent(epInfoURL)}`;
+
+      fetch(proxyEpURL)
         .then(res => res.json())
         .then(data => {
           if (data.episodes && Object.keys(data.episodes).length > 0) {
