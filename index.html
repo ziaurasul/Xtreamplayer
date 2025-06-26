@@ -3,32 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ZeeIPTV 🍿 Netflix UI</title>
+  <title>ZeeIPTV 🍿</title>
   <link href="https://cdn.jsdelivr.net/npm/video.js@8.5.2/dist/video-js.min.css"  rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/video.js@8.5.2/dist/video.min.js"></script> 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script> 
   <style>
-    body { font-family: Arial, sans-serif; background: #0e0e0e; color: #fff; margin: 0; padding: 0; }
-    .container { padding: 20px; max-width: 1200px; margin: auto; }
-    input, button { padding: 10px; margin: 5px 0; width: 100%; border-radius: 5px; border: none; }
-    button { background-color: #e50914; color: white; cursor: pointer; }
-    .tabs, .category-title { margin-top: 20px; }
-    .tabs { display: flex; justify-content: center; gap: 10px; }
-    .tab { background: #333; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-    .tab.active { background: #e50914; }
-    .grid { display: flex; flex-wrap: wrap; gap: 10px; }
-    .item { width: 160px; background: #1f1f1f; border-radius: 8px; overflow: hidden; cursor: pointer; }
-    .item img { width: 100%; height: 100px; object-fit: cover; }
-    .item div { padding: 8px; font-size: 14px; text-align: center; }
-    .splash-screen { position: fixed; inset: 0; background: black; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
-    .skip { margin-top: 20px; background: #e50914; padding: 10px 20px; border: none; color: white; border-radius: 5px; cursor: pointer; }
-    .hidden { display: none !important; }
-    /* Netflix Style Additions */
+    body {
+      font-family: Arial, sans-serif;
+      background: #0e0e0e;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      border-radius: 5px;
+      border: none;
+    }
+
+    button {
+      background-color: #e50914;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .tab {
+      background: #333;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: #e50914;
+    }
+
+    /* Section Titles */
     .section-title {
       margin-top: 20px;
       font-size: 18px;
       font-weight: bold;
     }
+
+    /* Horizontal Scrolling Rows */
     .carousel {
       display: flex;
       overflow-x: auto;
@@ -36,16 +70,43 @@
       scroll-behavior: smooth;
       padding-bottom: 10px;
     }
+
     .carousel::-webkit-scrollbar {
       height: 8px;
     }
+
     .carousel::-webkit-scrollbar-thumb {
       background: #444;
       border-radius: 4px;
     }
+
+    /* Cards */
+    .item {
+      min-width: 160px;
+      background: #1f1f1f;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
     .item:hover {
       transform: scale(1.05);
     }
+
+    .item img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+    }
+
+    .item div {
+      padding: 8px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    /* Player */
     .player-fullscreen {
       position: fixed;
       top: 0;
@@ -57,11 +118,39 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      flex-direction: column;
     }
+
     video {
       width: 100%;
       max-height: 100vh;
       object-fit: contain;
+    }
+
+    /* Splash Screen */
+    .splash-screen {
+      position: fixed;
+      inset: 0;
+      background: black;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .skip {
+      margin-top: 20px;
+      background: #e50914;
+      padding: 10px 20px;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
@@ -84,7 +173,7 @@
 </div>
 <!-- DO NOT CHANGE ABOVE THIS LINE -->
 
-<!-- Netflix-style Home Screen (Enhanced) -->
+<!-- Home Screen -->
 <div id="home" class="container hidden">
   <div class="tabs">
     <div class="tab active" onclick="loadTab('live')">Live</div>
@@ -102,41 +191,39 @@
 
 <script>
   let baseUrl = '', user = '', pass = '', currentType = 'live';
-  const cache = {};
 
-  // Do not touch
   function startApp() {
     document.getElementById('splash').classList.add('hidden');
     document.getElementById('loginBox').classList.remove('hidden');
   }
 
-  // Do not touch
   function login() {
     baseUrl = document.getElementById('server').value.trim();
     user = document.getElementById('username').value.trim();
     pass = document.getElementById('password').value.trim();
     document.getElementById('errorBox').textContent = "";
+
     if (!baseUrl.includes('http')) {
       document.getElementById('errorBox').textContent = "Enter valid server URL.";
       return;
     }
+
     fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}`)
       .then(res => res.json())
       .then(data => {
         if (data.user_info && data.user_info.auth == 1) {
           document.getElementById('loginBox').classList.add('hidden');
           document.getElementById('home').classList.remove('hidden');
-          loadTab('live'); // Load Netflix UI
+          loadTab('live'); // Load Netflix-style UI
         } else {
           document.getElementById('errorBox').textContent = "Login failed.";
         }
       })
       .catch(err => {
-        document.getElementById('errorBox').textContent = "Connection error: " + err;
+        document.getElementById('errorBox').textContent = "Connection error: " + err.message;
       });
   }
 
-  // Enhanced Netflix-style UI
   function loadTab(type) {
     currentType = type;
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -148,7 +235,8 @@
       series: 'get_series_categories'
     };
 
-    fetchFromCacheOrAPI(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${actionMap[type]}`, `cats-${type}`)
+    fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${actionMap[type]}`)
+      .then(res => res.json())
       .then(cats => {
         let html = '';
         cats.forEach(cat => {
@@ -165,8 +253,8 @@
       movie: 'get_vod_streams',
       series: 'get_series'
     };
-    const key = `${type}-${catId}`;
-    fetchFromCacheOrAPI(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${actionMap[type]}&category_id=${catId}`, key)
+    fetch(`${baseUrl}/player_api.php?username=${user}&password=${pass}&action=${actionMap[type]}&category_id=${catId}`)
+      .then(res => res.json())
       .then(items => {
         const grid = document.getElementById(`cat-${currentType}-${catId}`);
         items.forEach(item => {
@@ -230,22 +318,6 @@
     video.src = '';
     document.getElementById('playerPage').classList.add('hidden');
     document.getElementById('home').classList.remove('hidden');
-  }
-
-  // Caching helper
-  function fetchFromCacheOrAPI(url, key) {
-    const cached = localStorage.getItem(key);
-    if (cached) {
-      try {
-        return Promise.resolve(JSON.parse(cached));
-      } catch (e) {}
-    }
-    return fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        localStorage.setItem(key, JSON.stringify(data));
-        return data;
-      });
   }
 </script>
 </body>
